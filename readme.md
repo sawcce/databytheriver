@@ -58,6 +58,7 @@ suggest ideas!
 
 If you want to try it out right now:
 - Clone the repo
+- cd into the shard directory
 - `$cargo run`
 - Then you can try some queries out:
 ```
