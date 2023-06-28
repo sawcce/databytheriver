@@ -25,7 +25,7 @@ impl DB {
     }
 
     pub fn info_string(&self) -> String {
-        format!("Shard: {}", self.id.0.to_string())
+        format!("Shard: {}", self.id.to_string())
     }
 
     pub fn get_document_count(&self) -> usize {
@@ -35,8 +35,8 @@ impl DB {
     pub fn insert_user(&mut self, user: User) -> RID {
         self.document_count += 1;
         let rid = RID::new(Uuid::new_v4());
-        self.users.data.push(user);
-        let concatenated = self.id.0.to_string() + ":" + &rid.0;
+        self.users.push(user);
+        let concatenated = self.id.to_string() + ":" + &rid.to_string();
         RID::new(concatenated)
     }
 }

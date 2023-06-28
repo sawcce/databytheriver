@@ -11,6 +11,12 @@ impl RID {
     }
 }
 
+impl ToString for RID {
+    fn to_string(&self) -> String {
+        self.0.to_string()
+    }
+}
+
 impl From<&dyn ToString> for RID {
     fn from(value: &dyn ToString) -> Self {
         RID::new(value.to_string())
@@ -45,5 +51,9 @@ where
             .iter()
             .filter(|value| predicate(value))
             .collect::<Vec<_>>()
+    }
+
+    pub fn push(&mut self, data: T) {
+        self.data.push(data)
     }
 }
