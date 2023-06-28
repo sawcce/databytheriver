@@ -1,11 +1,11 @@
 use std::{
+    env,
+    fmt::format,
     rc::Rc,
     sync::{Arc, Mutex},
 };
 
-use crate::{
-    db::DB,
-};
+use crate::db::DB;
 
 use shared::models::{User, UserQueryParams};
 
@@ -50,8 +50,15 @@ struct Dispatcher {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let mut rdr = csv::Reader::from_path("./test.csv").unwrap();
-    let mut db = DB::new("test-a0c");
+    let mut args = env::args().skip(1);
+    let path = args.next().unwrap();
+    let id = args.next().unwrap();
+    let port = args.next().unwrap();
+
+    println!("{} {} {}", path, id, port);
+
+    let mut rdr = csv::Reader::from_path(path).unwrap();
+    let mut db = DB::new(id);
 
     for result in rdr.deserialize().skip(0) {
         let user: User = result?;
@@ -71,7 +78,8 @@ async fn main() -> std::io::Result<()> {
             .service(canadians)
             .app_data(web::Data::new(db.clone()))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(format!("[::1]:{}", port))?
+    .bind(format!("127.0.0.1:{}", port))?
     .run()
     .await
 }

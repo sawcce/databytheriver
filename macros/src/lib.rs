@@ -62,7 +62,7 @@ pub fn query_params(input: TokenStream) -> TokenStream {
     let builder = format_ident!("{}QueryParamsBuilder", ident);
 
     let result = quote! {
-        #[derive(serde::Deserialize, Clone, Debug)]
+        #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
         pub struct #structname {
             #(#fields),*
         }
