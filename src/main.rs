@@ -3,12 +3,12 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use once_cell::sync::Lazy;
-
+mod models;
+use crate::{
+    db::DB,
+    models::{User, UserQueryParams},
+};
 use actix_web::{get, web, App, HttpServer, Responder};
-use serde::Deserialize;
-
-use crate::db::{User, UserQueryParams, DB};
 mod db;
 
 #[get("/")]
@@ -38,8 +38,11 @@ async fn get_user(
     query: web::Query<UserQueryParams>,
 ) -> impl Responder {
     let db = DB::unlock(&db);
-    let builder = db.users.filter_builder();
-    let builder = builder.filter(|user| user.matches_criteria(&query));
+
+    let builder = db
+        .users
+        .filter_builder()
+        .filter(|user| user.matches_criteria(&query));
 
     let users: Vec<_> = builder.collect();
     println!("{users:?} {query:?}");

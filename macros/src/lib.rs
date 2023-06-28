@@ -3,6 +3,9 @@ use quote::{format_ident, quote, ToTokens};
 use syn::{parse_macro_input, token::Struct, Data, DeriveInput};
 
 #[proc_macro_derive(QueryParams)]
+/// Creates new structs and methods to make filtering easier
+/// QueryParams creates a struct with optional fields so that it can
+/// either be used with actix query params or with the builder
 pub fn query_params(input: TokenStream) -> TokenStream {
     let DeriveInput {
         attrs, data, ident, ..

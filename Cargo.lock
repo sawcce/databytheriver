@@ -387,6 +387,7 @@ dependencies = [
  "actix-web",
  "csv",
  "dblib",
+ "dblib-macros",
  "once_cell",
  "serde",
  "serde_json",
@@ -395,6 +396,13 @@ dependencies = [
 
 [[package]]
 name = "dblib"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "dblib-macros"
 version = "0.1.0"
 dependencies = [
  "quote",
