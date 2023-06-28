@@ -18,8 +18,9 @@ pub fn query_params(input: TokenStream) -> TokenStream {
 
     let fields = data.fields.iter().map(|field| {
         let field_ident = field.ident.clone().into_token_stream();
+        let type_token = field.ty.clone().into_token_stream();
         quote! {
-            #field_ident: Option<String>
+            #field_ident: Option<#type_token>
         }
     });
 
