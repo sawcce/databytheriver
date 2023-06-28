@@ -57,7 +57,7 @@ struct Dispatcher {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let mut rdr = csv::Reader::from_path("./test.csv").unwrap();
-    let mut db = DB::new("france-paris-08");
+    let mut db = DB::new("test-a0c");
 
     for result in rdr.deserialize().skip(0) {
         let user: User = result?;
