@@ -54,14 +54,34 @@ suggest ideas!
 - /shard: Code for an individual db shard
 - /shared: Where you define models and code that is shared between the dispatcher/db
 
+# Current concerns
+- How to handle authentication/authorization
+- Whether or not the developer should have direct access to the way the db acts or if
+you only have control over the dispatcher? 
+  - Then how do you handle auth?
+  - How to provide a nice api if the db interface isn't always the same
+- Deployment pipeline
+
 # Testing note
 
 If you want to try it out right now:
 - Clone the repo
-- cd into the shard directory
-- `$cargo run`
-- Then you can try some queries out:
+Launch one or both shards:
+```
+cd shard
+cargo run -- .\test-a0c.csv test-a0c 8080
+cargo run -- .\test-b1d.csv test-b1d 8081
+```
+
+Launch the dispatcher:
+
+```
+cd dispatcher
+cargo run
+```
+
+Then you can try some queries:
+
 ```
 GET http://127.0.0.1:8080/get_user?country=United States
-GET http://127.0.0.1:8080/canadians
 ```
