@@ -399,6 +399,7 @@ dependencies = [
 name = "dblib"
 version = "0.1.0"
 dependencies = [
+ "dblib-macros",
  "serde",
 ]
 
@@ -923,7 +924,7 @@ dependencies = [
 name = "shared"
 version = "0.1.0"
 dependencies = [
- "dblib-macros",
+ "dblib",
  "serde",
 ]
 
