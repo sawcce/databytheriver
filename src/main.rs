@@ -19,7 +19,7 @@ async fn info(db: web::Data<Arc<Mutex<DB>>>) -> impl Responder {
 #[get("/canadians")]
 async fn canadians(db: web::Data<Arc<Mutex<DB>>>) -> impl Responder {
     let db = DB::unlock(&db);
-    let query = UserQueryParams::builder().country("Canada".into()).wrap();
+    let query = UserQueryParams::builder().country("Canada").wrap();
 
     let users = db.users.filter(|user| user.matches_criteria(&query));
     serde_json::to_string(&users)
