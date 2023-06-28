@@ -27,14 +27,7 @@ async fn canadians(db: web::Data<Arc<Mutex<DB>>>) -> impl Responder {
 }
 
 #[get("/get_users")]
-async fn get_users(db: web::Data<Arc<Mutex<DB>>>) -> impl Responder {
-    let db = DB::unlock(&db);
-    let users = db.users.get_all();
-    serde_json::to_string(&users)
-}
-
-#[get("/get_user")]
-async fn get_user(
+async fn get_users(
     db: web::Data<Arc<Mutex<DB>>>,
     query: web::Query<UserQueryParams>,
 ) -> impl Responder {
@@ -74,7 +67,6 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .service(info)
-            .service(get_user)
             .service(get_users)
             .service(canadians)
             .app_data(web::Data::new(db.clone()))

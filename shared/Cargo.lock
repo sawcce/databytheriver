@@ -3,6 +3,14 @@
 version = 3
 
 [[package]]
+name = "dblib"
+version = "0.1.0"
+dependencies = [
+ "dblib-macros",
+ "serde",
+]
+
+[[package]]
 name = "dblib-macros"
 version = "0.1.0"
 dependencies = [
@@ -52,7 +60,7 @@ dependencies = [
 name = "shared"
 version = "0.1.0"
 dependencies = [
- "dblib-macros",
+ "dblib",
  "serde",
 ]
 
