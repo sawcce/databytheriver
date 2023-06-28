@@ -391,6 +391,7 @@ dependencies = [
  "once_cell",
  "serde",
  "serde_json",
+ "shared",
  "uuid",
 ]
 
@@ -916,6 +917,14 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
+]
+
+[[package]]
+name = "shared"
+version = "0.1.0"
+dependencies = [
+ "dblib-macros",
+ "serde",
 ]
 
 [[package]]

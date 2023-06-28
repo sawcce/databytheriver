@@ -3,11 +3,12 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-mod models;
 use crate::{
     db::DB,
-    models::{User, UserQueryParams},
 };
+
+use shared::models::{User, UserQueryParams};
+
 use actix_web::{get, web, App, HttpServer, Responder};
 mod db;
 

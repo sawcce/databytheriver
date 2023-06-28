@@ -47,12 +47,17 @@ I think it could bring a lot of flexibility and performance, if done right.
 Let's see where this goes! Feel free to contribute, help with code quality or even
 suggest ideas!
 
+# Project structure 
+- /dispatcher: Code for the dispatcher
+- /lib: library code 
+- /macros: Procedural and utility macros to make your life easier
+- /shard: Code for an individual db shard
+- /shared: Where you define models and code that is shared between the dispatcher/db
+
 # Testing note
 
 If you want to try it out right now:
 - Clone the repo
-- Bring a csv dataset of your choice into the file named "test.csv" with the same
-schema as the first row
 - `$cargo run`
 - Then you can try some queries out:
 ```

@@ -3,7 +3,7 @@ use dblib::{Repository, RID};
 use std::sync::{Arc, Mutex, MutexGuard};
 use uuid::Uuid;
 
-use crate::models::User;
+use shared::models::User;
 
 pub struct DB {
     id: RID,
