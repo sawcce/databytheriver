@@ -33,9 +33,10 @@ pub fn query_params(input: TokenStream) -> TokenStream {
 
     let methods = data.fields.iter().map(|field| {
         let field_ident = field.ident.clone().into_token_stream();
+        let type_token = field.ty.clone().into_token_stream();
 
         quote! {
-            pub fn #field_ident(mut self, value: String) -> Self {
+            pub fn #field_ident(mut self, value: #type_token) -> Self {
                 self.0.#field_ident = Some(value);
                 self
             }
