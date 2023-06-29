@@ -7,7 +7,8 @@ use std::{
 
 use futures::future::join_all;
 
-use actix_web::{self, get, web, App, HttpServer, Responder};
+use actix_web::{self, get, middleware::Logger, web, App, HttpServer, Responder};
+use env_logger::Env;
 use reqwest::{self, Client};
 
 #[derive(Debug, Clone)]
@@ -88,10 +89,13 @@ async fn main() -> std::io::Result<()> {
     };
     let dispatcher = Arc::new(Mutex::new(dispatcher));
 
+    env_logger::init_from_env(Env::default().default_filter_or("info"));
+
     HttpServer::new(move || {
         App::new()
             .service(get_users)
             .app_data(web::Data::new(dispatcher.clone()))
+            .wrap(Logger::default())
     })
     .bind(("127.0.0.1", 8000))?
     .run()
