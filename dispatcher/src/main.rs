@@ -1,11 +1,8 @@
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use shared::models::{User, UserQueryParams};
-use std::{
-    ops::Deref,
-    sync::{Arc, Mutex},
-};
+use std::{ops::Deref, sync::Arc};
 
-use futures::future::join_all;
+use futures::{future::join_all, lock::Mutex};
 
 use actix_web::{self, get, middleware::Logger, web, App, HttpServer, Responder};
 use env_logger::Env;
@@ -68,18 +65,18 @@ impl Dispatcher {
 pub async fn get_users(
     dispatcher: web::Data<Arc<Mutex<Dispatcher>>>,
     query: web::Query<UserQueryParams>,
-) -> impl Responder {
+) -> actix_web::Result<impl Responder> {
     let query = serde_urlencoded::to_string(query.0).unwrap();
     println!("{query}");
 
     let res = dispatcher
         .clone()
         .lock()
-        .unwrap()
+        .await
         .execute_query::<User>(&format!("get_users?{}", query))
         .await;
 
-    serde_json::to_string(&res)
+    Ok(serde_json::to_string(&res))
 }
 
 #[actix_web::main]
