@@ -11,10 +11,7 @@ pub fn query_params(input: TokenStream) -> TokenStream {
 
     let data = match data {
         Data::Struct(data) => data,
-        _ => {
-            println!("Only supported on structs!");
-            return TokenStream::new();
-        }
+        _ => return quote!(compile_error!("#[derive(QueryParams)] only works on structs");).into(),
     };
 
     let fields = data.fields.iter().map(|field| {
