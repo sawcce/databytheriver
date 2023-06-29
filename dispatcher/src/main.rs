@@ -1,9 +1,11 @@
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use shared::models::{User, UserQueryParams};
 use std::{
-    marker::PhantomData,
+    ops::Deref,
     sync::{Arc, Mutex},
 };
+
+use futures::future::join_all;
 
 use actix_web::{self, get, web, App, HttpServer, Responder};
 use reqwest::{self, Client};
@@ -13,28 +15,51 @@ pub struct Dispatcher {
     instances: Vec<Arc<str>>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 struct DispatchResult<T>(Vec<T>);
 
+impl<T> IntoIterator for DispatchResult<T> {
+    type Item = T;
+    type IntoIter = <Vec<T> as IntoIterator>::IntoIter;
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl<T> Deref for DispatchResult<T> {
+    type Target = [T];
+
+    fn deref(&self) -> &[T] {
+        &self.0[..]
+    }
+}
+
 impl Dispatcher {
-    pub async fn execute_query<'de, T: DeserializeOwned>(&self, url: &String) -> DispatchResult<T> {
-        let mut result = Vec::new();
-        let client = Client::new();
+    pub async fn execute_query<'de, T: DeserializeOwned + Clone>(&self, url: &String) -> Vec<T> {
+        let mut futures = Vec::with_capacity(self.instances.len());
 
         for instance in self.instances.iter().clone() {
-            let mut a = client
-                .get(format!("http://{}/{}", instance, url.clone()))
-                .send()
-                .await
-                .unwrap()
-                .json::<DispatchResult<T>>()
-                .await
-                .unwrap();
+            futures.push(async {
+                let client = Client::new();
 
-            result.append(&mut a.0);
+                client
+                    .get(format!("http://{}/{}", instance.clone(), &url))
+                    .send()
+                    .await
+                    .unwrap()
+                    .json::<DispatchResult<T>>()
+                    .await
+                    .unwrap()
+                    .0
+            });
         }
 
-        DispatchResult(result)
+        let result: Vec<T> = join_all(futures.into_iter())
+            .await
+            .into_iter()
+            .flatten()
+            .collect();
+        result.clone()
     }
 }
 
