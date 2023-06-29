@@ -17,40 +17,18 @@ create interfaces (exporting your schemas as typescript or jsdoc for instance)
 if it involves dropping fields.
 
 Current state:
-I'm exploring the different ways that a single shard can handle its data. 
-Although both the endpoints and the data live on the same process, I wish to 
-be able to separate them in the near future so that the developer can focus
-on create queries on the dispatcher and not the individual shards.
-I have managed to add support for procedural macros which drastically decreases the 
-complexity of queries, by making it possible to directly test if a document matches
-certain criteria (it is still quite primitive and it's only possible to do
-primitive queries). 
+I'm trying to streamline the development process. 
+Which means finding a way to create a database struct based on a list of models
+and create the required endpoints.  
 
-I'd like the system to rely on one or more dispatchers which would take
-advantage of the distributed network of shards to make complex queries
-that don't just rely on one data source.
-
-The current system is very diy, but I think it could be made into an actual
-database suitable for hobbyists and small to medium projects.
-
-
-One of the biggest concerns right now is that since the models are embedded into the
-executable it would be quite hard to make mechanisms that could propagate these
-changes reliably over a distributed network while causing few disruptions. (That doesn't mean
-that it's not possible).
-
-
-Also this kind of architecture could also make some patterns possible, like 
-reserving a shard to a certain model or to specific relationships. Overall,
-I think it could bring a lot of flexibility and performance, if done right.
-
-Let's see where this goes! Feel free to contribute, help with code quality or even
-suggest ideas!
+One way to make the deployment process easier would be to deploy the shards as
+dynamically linkable libraries which would then consumed by the shards and dispatcher
+instances.
 
 # Project structure 
 - /dispatcher: Code for the dispatcher
 - /lib: library code 
-- /macros: Procedural and utility macros to make your life easier
+- /macros: Procedural and utility macros to make your life easier (directly included in /lib)
 - /shard: Code for an individual db shard
 - /shared: Where you define models and code that is shared between the dispatcher/db
 
@@ -66,7 +44,7 @@ you only have control over the dispatcher?
 
 If you want to try it out right now:
 - Clone the repo
-Launch one or both shards:
+- Launch both shards:
 ```
 cd shard
 cargo run -- .\test-a0c.csv test-a0c 8080
