@@ -61,5 +61,5 @@ cargo run
 Then you can try some queries:
 
 ```
-GET http://127.0.0.1:8080/get_user?country=United States
+GET http://127.0.0.1:8000/get_user?country=United States
 ```
