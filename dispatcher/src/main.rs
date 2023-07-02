@@ -61,7 +61,7 @@ impl Dispatcher {
     }
 }
 
-#[get("/get_users")]
+#[get("/get_user")]
 pub async fn get_users(
     dispatcher: web::Data<Arc<Mutex<Dispatcher>>>,
     query: web::Query<UserQueryParams>,
@@ -73,7 +73,7 @@ pub async fn get_users(
         .clone()
         .lock()
         .await
-        .execute_query::<User>(&format!("get_users?{}", query))
+        .execute_query::<User>(&format!("get_user?{}", query))
         .await;
 
     Ok(serde_json::to_string(&res))
@@ -81,9 +81,13 @@ pub async fn get_users(
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let dispatcher = Dispatcher {
-        instances: vec!["127.0.0.1:8080".into(), "127.0.0.1:8081".into()],
-    };
+    let instances = std::env::var("INSTANCES")
+        .unwrap()
+        .split(",")
+        .map(|addr| Arc::from(addr))
+        .collect::<Vec<_>>();
+
+    let dispatcher = Dispatcher { instances };
     let dispatcher = Arc::new(Mutex::new(dispatcher));
 
     env_logger::init_from_env(Env::default().default_filter_or("info"));
