@@ -29,7 +29,7 @@ async fn main() -> std::io::Result<()> {
     let db = Arc::new(Mutex::new(shard));
 
     HttpServer::new(move || {
-        let mut app = App::new().service(get_users);
+        let mut app = App::new();
 
         for service in db.clone().try_lock().unwrap().get_services() {
             app = app.service(service);
