@@ -1,42 +1,26 @@
-use std::{
-    env,
-    fmt::format,
-    ops::DerefMut,
-    rc::Rc,
-    sync::{Arc, Mutex},
-};
+use std::{env, fmt::format, ops::DerefMut, rc::Rc, sync::Arc};
 
 use crate::db::DB;
 
 use dblib::macros::data_shard;
+use futures::lock::Mutex;
 use shared::models::{User, UserQueryParams};
 
 use actix_web::{dev::HttpServiceFactory, get, web, App, HttpServer, Responder};
 mod db;
 
-#[get("/")]
-async fn info(db: web::Data<Arc<Mutex<DB>>>) -> impl Responder {
-    db.clone().lock().unwrap().info_string()
-}
-
-#[get("/canadians")]
-async fn canadians(db: web::Data<Arc<Mutex<DB>>>) -> impl Responder {
-    let db = DB::unlock(&db);
-    let query = UserQueryParams::builder().country("Canada").wrap();
-
-    let users = db.users.filter(|user| user.matches_criteria(&query));
-    serde_json::to_string(&users)
-}
+data_shard!(User);
 
 #[get("/get_users")]
 async fn get_users(
-    db: web::Data<Arc<Mutex<DB>>>,
+    db: web::Data<Arc<Mutex<DataShard>>>,
     query: web::Query<UserQueryParams>,
 ) -> impl Responder {
-    let db = DB::unlock(&db);
+    let db = db.clone();
+    let db = db.lock().await;
 
     let builder = db
-        .users
+        .user_repo
         .filter_builder()
         .filter(|user| user.matches_criteria(&query));
 
@@ -45,8 +29,6 @@ async fn get_users(
 
     serde_json::to_string(&users)
 }
-
-data_shard!(User);
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -72,12 +54,9 @@ async fn main() -> std::io::Result<()> {
     let db = Arc::new(Mutex::new(shard));
 
     HttpServer::new(move || {
-        let mut app = App::new()
-            .service(info)
-            .service(get_users)
-            .service(canadians);
+        let mut app = App::new().service(get_users);
 
-        for service in db.clone().lock().unwrap().get_services() {
+        for service in db.clone().try_lock().unwrap().get_services() {
             app = app.service(service);
         }
 
