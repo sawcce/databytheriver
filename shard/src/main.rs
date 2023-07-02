@@ -4,28 +4,9 @@ use dblib::macros::data_shard;
 use futures::lock::Mutex;
 use shared::models::{User, UserQueryParams};
 
-use actix_web::{get, web, App, HttpServer, Responder};
+use actix_web::{web, App, HttpServer};
 
 data_shard!(User);
-
-#[get("/get_users")]
-async fn get_users(
-    db: web::Data<Arc<Mutex<DataShard>>>,
-    query: web::Query<UserQueryParams>,
-) -> impl Responder {
-    let db = db.clone();
-    let db = db.lock().await;
-
-    let builder = db
-        .user_repo
-        .filter_builder()
-        .filter(|user| user.matches_criteria(&query));
-
-    let users: Vec<_> = builder.collect();
-    println!("{users:?} {query:?}");
-
-    serde_json::to_string(&users)
-}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
