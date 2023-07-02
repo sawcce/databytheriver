@@ -60,3 +60,8 @@ where
         self.data.push(data)
     }
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct QueryParams {
+    pub limit: Option<usize>,
+}

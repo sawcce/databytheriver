@@ -102,6 +102,7 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
             pub async fn #ident(
                 db: actix_web::web::Data<std::sync::Arc<futures::lock::Mutex<DataShard>>>,
                 query: actix_web::web::Query<#query_params>,
+                params: actix_web::web::Json<dblib::QueryParams>,
             ) -> actix_web::Result<impl actix_web::Responder> {
                 let db = db.clone();
                 let db = db.lock().await;
@@ -111,7 +112,13 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
                     .filter_builder()
                     .filter(|doc| doc.matches_criteria(&query));
 
-                Ok(serde_json::to_string(&builder.collect::<Vec<_>>()))
+                match params.limit {
+                    Some(limit) => {
+                        let builder = builder.take(limit);
+                        Ok(serde_json::to_string(&builder.collect::<Vec<_>>()))
+                    },
+                    None => Ok(serde_json::to_string(&builder.collect::<Vec<_>>()))
+                }
             }
         }
     });
