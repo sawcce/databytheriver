@@ -1,11 +1,9 @@
-use std::fmt::format;
-
 use proc_macro::TokenStream;
 use quote::{format_ident, quote, ToTokens};
 use syn::{
     parse::{Parse, ParseStream},
     parse_macro_input,
-    token::{self, Comma},
+    token::Comma,
     Data, DeriveInput, Ident,
 };
 
@@ -157,7 +155,7 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
 
             #(#insert)*
 
-            pub fn get_services(&self) -> Vec<Service> {
+            pub fn get_services(&self) -> Vec<impl actix_web::dev::HttpServiceFactory> {
                 vec![#(#services_list),*]
             }
         }
