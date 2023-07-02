@@ -64,7 +64,6 @@ async fn main() -> std::io::Result<()> {
     for result in rdr.deserialize().skip(0) {
         let user: User = result?;
         shard.insert_user(user.clone());
-        println!("{:?}: {user:?}", user.id);
     }
 
     /* let queryResult = db.users.filter(|user| user.first_name == "Leota");
