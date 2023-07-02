@@ -83,7 +83,7 @@ pub async fn get_users(
 async fn main() -> std::io::Result<()> {
     let instances = std::env::var("INSTANCES")
         .unwrap()
-        .split(",")
+        .split(";")
         .map(|addr| Arc::from(addr))
         .collect::<Vec<_>>();
 
