@@ -60,8 +60,3 @@ where
         self.data.push(data)
     }
 }
-
-pub struct DataShard<T> {
-    id: RID,
-    db: T,
-}
