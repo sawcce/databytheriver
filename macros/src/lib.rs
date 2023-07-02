@@ -102,6 +102,8 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
             pub async fn #ident(
                 db: actix_web::web::Data<std::sync::Arc<futures::lock::Mutex<DataShard>>>,
                 query: actix_web::web::Query<#query_params>,
+                // TODO: Use Result instead to better notify in case of
+                // TODO: body formed incorrectly
                 params: Option<actix_web::web::Json<dblib::QueryParams>>,
             ) -> actix_web::Result<impl actix_web::Responder> {
                 let db = db.clone();
