@@ -44,15 +44,14 @@ you only have control over the dispatcher?
 
 If you want to try it out right now:
 - Clone the repo
-- Launch both shards:
+- Launch one or both shards:
 ```
 cd shard
 cargo run -- .\test-a0c.csv test-a0c 8080
 cargo run -- .\test-b1d.csv test-b1d 8081
 ```
-
-Launch the dispatcher:
-
+- Set the environment variable `INSTANCES` (on the dispatcher machine) to contain a semicolon list of all the shard addresses (`ex: 127.0.0.1:8080;127.0.0.1:8081`)
+- Launch the dispatcher:
 ```
 cd dispatcher
 cargo run
@@ -61,5 +60,5 @@ cargo run
 Then you can try some queries:
 
 ```
-GET http://127.0.0.1:8000/get_user?country=United States
+GET http://<address of the dispatcher>:8000/get_user?country=United States
 ```
