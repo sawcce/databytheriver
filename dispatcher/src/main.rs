@@ -1,3 +1,4 @@
+use log::info;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use shared::models::{User, UserQueryParams};
 use std::{ops::Deref, sync::Arc};
@@ -87,10 +88,18 @@ async fn main() -> std::io::Result<()> {
         .map(|addr| Arc::from(addr))
         .collect::<Vec<_>>();
 
-    let dispatcher = Dispatcher { instances };
+    let dispatcher = Dispatcher {
+        instances: instances.clone(),
+    };
     let dispatcher = Arc::new(Mutex::new(dispatcher));
 
     env_logger::init_from_env(Env::default().default_filter_or("info"));
+
+    info!("Started with {} instance(s):", instances.len());
+
+    for instance in instances {
+        info!("Instance: {instance}");
+    }
 
     HttpServer::new(move || {
         App::new()
