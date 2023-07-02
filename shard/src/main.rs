@@ -1,13 +1,10 @@
 use std::{env, fmt::format, ops::DerefMut, rc::Rc, sync::Arc};
 
-use crate::db::DB;
-
 use dblib::macros::data_shard;
 use futures::lock::Mutex;
 use shared::models::{User, UserQueryParams};
 
 use actix_web::{dev::HttpServiceFactory, get, web, App, HttpServer, Responder};
-mod db;
 
 data_shard!(User);
 
