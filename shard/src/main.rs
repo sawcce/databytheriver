@@ -48,9 +48,6 @@ async fn main() -> std::io::Result<()> {
         shard.insert_user(user.clone());
     }
 
-    /* let queryResult = db.users.filter(|user| user.first_name == "Leota");
-    println!("{queryResult:?}"); */
-    //let services = shard.get_services();
     let db = Arc::new(Mutex::new(shard));
 
     HttpServer::new(move || {
