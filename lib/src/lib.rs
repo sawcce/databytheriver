@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use actix_web::dev::{AppService, HttpServiceFactory};
 use serde::{Deserialize, Serialize};
 pub mod macros;
 
@@ -24,16 +25,17 @@ impl From<&dyn ToString> for RID {
     }
 }
 
+#[derive(Clone)]
 pub struct Repository<T>
 where
-    T: Serialize,
+    T: Serialize + Clone,
 {
     data: Vec<T>,
 }
 
 impl<T> Repository<T>
 where
-    T: Serialize,
+    T: Serialize + Clone,
 {
     pub fn new() -> Self {
         Self { data: Vec::new() }
@@ -54,7 +56,7 @@ where
             .collect::<Vec<_>>()
     }
 
-    pub fn push(&mut self, data: T) {
+    pub fn insert_one(&mut self, data: T) {
         self.data.push(data)
     }
 }

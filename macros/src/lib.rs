@@ -1,6 +1,149 @@
+use std::fmt::format;
+
 use proc_macro::TokenStream;
 use quote::{format_ident, quote, ToTokens};
-use syn::{parse_macro_input, Data, DeriveInput};
+use syn::{
+    parse::{Parse, ParseStream},
+    parse_macro_input,
+    token::{self, Comma},
+    Data, DeriveInput, Ident,
+};
+
+#[derive(Debug)]
+struct DatashardInfo {
+    models: Vec<Ident>,
+}
+
+impl DatashardInfo {
+    fn new(models: Vec<Ident>) -> Self {
+        Self { models }
+    }
+}
+
+impl Parse for DatashardInfo {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let mut models = Vec::new();
+        loop {
+            match input.parse() {
+                Ok(ty) => models.push(ty),
+                Err(..) => return Ok(DatashardInfo::new(models)),
+            };
+
+            match input.parse::<Comma>() {
+                Ok(..) => {}
+                Err(..) => return Ok(DatashardInfo::new(models)),
+            };
+        }
+    }
+}
+
+#[proc_macro]
+/// Creates a database struct
+pub fn data_shard(input: TokenStream) -> TokenStream {
+    let data_shard_info = parse_macro_input!(input as DatashardInfo);
+    println!("{data_shard_info:?}");
+
+    let fields = data_shard_info.models.iter().map(|ty| {
+        let identifier = format_ident!("{}_repo", ty.to_string().to_lowercase());
+        quote! {
+            #identifier: dblib::Repository<#ty>,
+        }
+    });
+
+    let fields_init = data_shard_info.models.iter().map(|ty| {
+        let identifier = format_ident!("{}_repo", ty.to_string().to_lowercase());
+        quote! {
+            #identifier: dblib::Repository::new(),
+        }
+    });
+
+    let methods = data_shard_info
+        .models
+        .iter()
+        .map(|ty| format_ident!("get_{}", ty.to_string().to_lowercase()));
+
+    let insert = data_shard_info.models.iter().map(|ty| {
+        let ident = format_ident!("insert_{}", ty.to_string().to_lowercase());
+        let repo = format_ident!("{}_repo", ty.to_string().to_lowercase());
+
+        quote! {
+            pub fn #ident (&mut self, value: #ty) {
+                self.#repo.insert_one(value);
+            }
+        }
+    });
+
+    let branches = methods.clone().map(|service| {
+        quote! {
+            Service::#service(#service) => #service.register(a_s)
+        }
+    });
+
+    let services = methods.clone().map(|service| {
+        quote! {
+            #service(#service)
+        }
+    });
+
+    let services_list = methods.clone().map(|service| {
+        quote! {
+            Service::#service(#service)
+        }
+    });
+
+    let endpoints = methods.clone().map(|method_name| {
+        let ident = method_name;
+        let method_name = ident.to_string();
+
+        quote! {
+            #[actix_web::get(#method_name)]
+            pub async fn #ident() -> actix_web::Result<impl actix_web::Responder> {
+                Ok(#method_name)
+            }
+        }
+    });
+
+    let res = quote! {
+        #(#endpoints)*
+
+        #[derive(Clone)]
+        pub struct DataShard {
+            id: dblib::RID,
+            #(#fields),*
+        }
+
+        pub enum Service {
+            #(#services),*
+        }
+
+        impl actix_web::dev::HttpServiceFactory for Service {
+            fn register(self, a_s: &mut actix_web::dev::AppService) {
+                match self {
+                    #(#branches)*,
+                }
+            }
+        }
+
+        impl DataShard {
+            pub fn new(id: impl ToString) -> Self {
+                Self {
+                    id: dblib::RID::new(id),
+                    #(#fields_init),*
+                }
+            }
+
+            #(#insert)*
+
+            pub fn get_services(&self) -> Vec<Service> {
+                vec![#(#services_list),*]
+            }
+        }
+    };
+
+    println!("{:#}", res.to_string());
+
+    res.into()
+}
 
 #[proc_macro_derive(QueryParams)]
 /// Creates new structs and methods to make filtering easier

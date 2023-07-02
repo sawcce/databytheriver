@@ -1,15 +1,17 @@
 use std::{
     env,
     fmt::format,
+    ops::DerefMut,
     rc::Rc,
     sync::{Arc, Mutex},
 };
 
 use crate::db::DB;
 
+use dblib::macros::data_shard;
 use shared::models::{User, UserQueryParams};
 
-use actix_web::{get, web, App, HttpServer, Responder};
+use actix_web::{dev::HttpServiceFactory, get, web, App, HttpServer, Responder};
 mod db;
 
 #[get("/")]
@@ -44,9 +46,7 @@ async fn get_users(
     serde_json::to_string(&users)
 }
 
-struct Dispatcher {
-    instances: Vec<Rc<str>>,
-}
+data_shard!(User);
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -58,25 +58,31 @@ async fn main() -> std::io::Result<()> {
     println!("{} {} {}", path, id, port);
 
     let mut rdr = csv::Reader::from_path(path).unwrap();
-    let mut db = DB::new(id);
+
+    let mut shard = DataShard::new(id.clone());
 
     for result in rdr.deserialize().skip(0) {
         let user: User = result?;
-        let id = db.insert_user(user.clone());
-        println!("{id:?}: {user:?}, {}", db.get_document_count());
+        shard.insert_user(user.clone());
+        println!("{:?}: {user:?}", user.id);
     }
 
     /* let queryResult = db.users.filter(|user| user.first_name == "Leota");
     println!("{queryResult:?}"); */
-
-    let db = Arc::new(Mutex::new(db));
+    //let services = shard.get_services();
+    let db = Arc::new(Mutex::new(shard));
 
     HttpServer::new(move || {
-        App::new()
+        let mut app = App::new()
             .service(info)
             .service(get_users)
-            .service(canadians)
-            .app_data(web::Data::new(db.clone()))
+            .service(canadians);
+
+        for service in db.clone().lock().unwrap().get_services() {
+            app = app.service(service);
+        }
+
+        app.app_data(web::Data::new(db.clone()))
     })
     .bind(format!("[::1]:{}", port))?
     .bind(format!("0.0.0.0:{}", port))?
