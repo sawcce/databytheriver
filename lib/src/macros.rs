@@ -5,8 +5,8 @@ macro_rules! model {
     ($name:ident, $($field:ident:$type:tt),*) => {
         #[derive(Debug, Clone, Serialize, Deserialize, QueryParams)]
         pub struct $name {
-            id: dblib::RID,
-            $($field: $type),*
+            pub id: dblib::RID,
+            $(pub $field: $type),*
         }
     };
 }
