@@ -155,6 +155,7 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
             pub fn setup(config: &mut dblib::actix_web::web::ServiceConfig) {
                 config #(#services_list)*;
                 // TODO: Implement data loading
+                // TODO: Implement non-static id
                 let db = std::sync::Arc::new(dblib::futures::lock::Mutex::new(DataShard::new("test")));
 
                 config.app_data(dblib::actix_web::web::Data::new(db.clone()));
