@@ -152,12 +152,15 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
             #(#insert)*
         }
 
+        static DB: dblib::once_cell::sync::OnceCell<std::sync::Arc<dblib::futures::lock::Mutex<DataShard>>> = dblib::once_cell::sync::OnceCell::new();
+
         #[no_mangle]
         pub extern "C" fn setup_shard(config: &mut dblib::actix_web::web::ServiceConfig) {
                 config #(#services_list)*;
+
                 // TODO: Implement data loading
                 // TODO: Implement non-static id
-                let db = std::sync::Arc::new(dblib::futures::lock::Mutex::new(DataShard::new("test")));
+                let db = DB.get_or_init(|| std::sync::Arc::new(dblib::futures::lock::Mutex::new(DataShard::new("test"))));
 
                 config.app_data(dblib::actix_web::web::Data::new(db.clone()));
                 println!("Setting up!");
