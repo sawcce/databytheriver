@@ -15,6 +15,11 @@ async fn main() -> std::io::Result<()> {
     let id = args.next().unwrap();
     let port = args.next().unwrap();
 
+    unsafe {
+        let lib = libloading::Library::new("/path/to/liblibrary.so").unwrap();
+        let func: libloading::Symbol<unsafe fn() -> u32> = lib.get(b"my_func").unwrap();
+    }
+
     println!("{} {} {}", path, id, port);
 
     let mut rdr = csv::Reader::from_path(path).unwrap();

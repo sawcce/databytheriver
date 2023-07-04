@@ -3,6 +3,10 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 pub mod macros;
 
+pub extern crate actix_web;
+pub extern crate futures;
+pub extern crate serde_json;
+
 #[derive(Eq, PartialEq, Hash, Clone, Debug, Serialize, Deserialize)]
 pub struct RID(Arc<str>);
 
@@ -64,3 +68,5 @@ where
 pub struct QueryParams {
     pub limit: Option<usize>,
 }
+
+pub trait Datashard {}

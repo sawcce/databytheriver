@@ -8,4 +8,6 @@ version = "0.1.0"
 [dependencies]
 actix-web = "4.3.1"
 dblib-macros = {path = "../macros"}
+futures = "*"
 serde = {version = "1.0", features = ["derive", "rc"]}
+serde_json = "*"

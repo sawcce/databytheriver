@@ -96,12 +96,12 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
         let repo = format_ident!("{}_repo", struct_name.to_string().to_lowercase());
 
         quote! {
-            #[actix_web::get(#method_name)]
+            #[dblib::actix_web::get(#method_name)]
             pub async fn #ident(
-                db: actix_web::web::Data<std::sync::Arc<futures::lock::Mutex<DataShard>>>,
-                query: actix_web::web::Query<#query_params>,
-                params: actix_web::web::Query<dblib::QueryParams>,
-            ) -> actix_web::Result<impl actix_web::Responder> {
+                db: dblib::actix_web::web::Data<std::sync::Arc<dblib::futures::lock::Mutex<DataShard>>>,
+                query: dblib::actix_web::web::Query<#query_params>,
+                params: dblib::actix_web::web::Query<dblib::QueryParams>,
+            ) -> dblib::actix_web::Result<impl dblib::actix_web::Responder> {
                 let db = db.clone();
                 let db = db.lock().await;
 
@@ -112,10 +112,10 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
 
                 if let Some(limit) = params.0.limit {
                     let builder = builder.take(limit);
-                    return Ok(serde_json::to_string(&builder.collect::<Vec<_>>()))
+                    return Ok(dblib::serde_json::to_string(&builder.collect::<Vec<_>>()))
                 }
 
-                Ok(serde_json::to_string(&builder.collect::<Vec<_>>()))
+                Ok(dblib::serde_json::to_string(&builder.collect::<Vec<_>>()))
             }
         }
     });
@@ -133,8 +133,8 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
             #(#services),*
         }
 
-        impl actix_web::dev::HttpServiceFactory for Service {
-            fn register(self, a_s: &mut actix_web::dev::AppService) {
+        impl dblib::actix_web::dev::HttpServiceFactory for Service {
+            fn register(self, a_s: &mut dblib::actix_web::dev::AppService) {
                 match self {
                     #(#branches)*,
                 }
@@ -151,7 +151,7 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
 
             #(#insert)*
 
-            pub fn get_services(&self) -> Vec<impl actix_web::dev::HttpServiceFactory> {
+            pub fn get_services(&self) -> Vec<impl dblib::actix_web::dev::HttpServiceFactory> {
                 vec![#(#services_list),*]
             }
         }

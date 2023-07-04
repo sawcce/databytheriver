@@ -411,7 +411,9 @@ version = "0.1.0"
 dependencies = [
  "actix-web",
  "dblib-macros",
+ "futures",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -1361,6 +1363,7 @@ dependencies = [
 name = "shared"
 version = "0.1.0"
 dependencies = [
+ "actix-web",
  "dblib",
  "serde",
 ]

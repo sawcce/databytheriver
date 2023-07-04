@@ -3,8 +3,12 @@ edition = "2021"
 name = "shared"
 version = "0.1.0"
 
+[lib]
+crate_type = ["dylib"]
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+actix-web = "4.3.1"
 dblib = {path = "../lib"}
 serde = {version = "1.0", features = ["derive"]}
