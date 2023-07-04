@@ -1,7 +1,8 @@
 use std::{env, sync::Arc};
 
 use dblib::macros::data_shard;
-use futures::lock::Mutex;
+use libloading::{Library, Symbol};
+use once_cell::sync::OnceCell;
 use shared::models::{User, UserQueryParams};
 
 use actix_web::{
@@ -13,6 +14,8 @@ data_shard!(User);
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    static LIB: OnceCell<Library> = OnceCell::new();
+
     let mut args = env::args().skip(1);
     let path = args.next().unwrap();
     let id = args.next().unwrap();
@@ -22,16 +25,16 @@ async fn main() -> std::io::Result<()> {
     println!("{} {} {} {}", path, id, port, lib);
 
     let configure = unsafe {
-        let lib = libloading::Library::new(lib).unwrap();
-        let setup_func: libloading::Symbol<unsafe fn() -> fn(&mut ServiceConfig)> =
+        let lib = LIB.get_or_init(|| Library::new(lib).unwrap());
+        let setup_func: Symbol<unsafe extern "C" fn(&mut ServiceConfig)> =
             lib.get(b"setup_shard").unwrap();
-        setup_func()
+        setup_func
     };
 
     HttpServer::new(move || {
         let app = App::new();
 
-        app.configure(|a| configure(a))
+        app.configure(|sc| unsafe { configure(sc) })
     })
     .bind(format!("[::1]:{}", port))?
     .bind(format!("0.0.0.0:{}", port))?

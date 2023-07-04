@@ -390,6 +390,7 @@ dependencies = [
  "dblib-macros",
  "futures",
  "libloading",
+ "once_cell",
  "serde",
  "serde_json",
  "shared",

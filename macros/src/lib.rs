@@ -150,21 +150,17 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
             }
 
             #(#insert)*
+        }
 
-
-            pub fn setup(config: &mut dblib::actix_web::web::ServiceConfig) {
+        #[no_mangle]
+        pub extern "C" fn setup_shard(config: &mut dblib::actix_web::web::ServiceConfig) {
                 config #(#services_list)*;
                 // TODO: Implement data loading
                 // TODO: Implement non-static id
                 let db = std::sync::Arc::new(dblib::futures::lock::Mutex::new(DataShard::new("test")));
 
                 config.app_data(dblib::actix_web::web::Data::new(db.clone()));
-            }
-        }
-
-        #[no_mangle]
-        pub fn setup_shard() -> fn(&mut dblib::actix_web::web::ServiceConfig) {
-            DataShard::setup
+                println!("Setting up!");
         }
     };
 
