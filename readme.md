@@ -68,6 +68,8 @@ cargo run
 ```
 
 ## Doesn't work (data loading not implemented yet)
+Data shards don't automatically load the data currently (read next section)
+
 Then you can try some queries:
 
 ```
@@ -75,6 +77,7 @@ GET http://<address of the dispatcher>:8000/get_user?country=United States
 ```
 
 ## Try this instead
+This will instead query a single data shard (you can change the port if you didn't directly copy the instructions)
 
 ```
 GET http://127.0.0.1:8080/insert_user?id=321&first_name=Mary&last_name=Smith&country=Australia&address=78 Leaf St.&city=Sydney
