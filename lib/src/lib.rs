@@ -6,7 +6,9 @@ pub mod macros;
 
 pub extern crate actix_web;
 pub extern crate futures;
+pub extern crate once_cell;
 pub extern crate serde_json;
+pub extern crate uuid;
 
 #[derive(Eq, PartialEq, Hash, Clone, Debug, Serialize, Deserialize)]
 pub struct RID(Arc<str>);
