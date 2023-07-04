@@ -4,7 +4,10 @@ use dblib::macros::data_shard;
 use futures::lock::Mutex;
 use shared::models::{User, UserQueryParams};
 
-use actix_web::{web, App, HttpServer};
+use actix_web::{
+    web::{self, ServiceConfig},
+    App, HttpServer,
+};
 
 data_shard!(User);
 
@@ -14,11 +17,7 @@ async fn main() -> std::io::Result<()> {
     let path = args.next().unwrap();
     let id = args.next().unwrap();
     let port = args.next().unwrap();
-
-    unsafe {
-        let lib = libloading::Library::new("/path/to/liblibrary.so").unwrap();
-        let func: libloading::Symbol<unsafe fn() -> u32> = lib.get(b"my_func").unwrap();
-    }
+    let lib = args.next().unwrap();
 
     println!("{} {} {}", path, id, port);
 
@@ -33,14 +32,20 @@ async fn main() -> std::io::Result<()> {
 
     let db = Arc::new(Mutex::new(shard));
 
+    let lib = unsafe { libloading::Library::new(lib).unwrap() };
+
+    let func = unsafe {
+        let func: libloading::Symbol<unsafe fn() -> fn(&mut ServiceConfig)> =
+            lib.get(b"setup_shard").unwrap();
+        func.clone()
+    };
+
+    let func = unsafe { func() };
+
     HttpServer::new(move || {
-        let mut app = App::new();
+        let app = App::new();
 
-        for service in db.clone().try_lock().unwrap().get_services() {
-            app = app.service(service);
-        }
-
-        app.app_data(web::Data::new(db.clone()))
+        app.configure(|a| func(a))
     })
     .bind(format!("[::1]:{}", port))?
     .bind(format!("0.0.0.0:{}", port))?

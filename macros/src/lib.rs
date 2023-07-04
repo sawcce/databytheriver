@@ -86,7 +86,7 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
 
     let services_list = methods.clone().map(|(service, ..)| {
         quote! {
-            Service::#service(#service)
+            .service(#service)
         }
     });
 
@@ -151,9 +151,21 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
 
             #(#insert)*
 
-            pub fn get_services(&self) -> Vec<impl dblib::actix_web::dev::HttpServiceFactory> {
-                vec![#(#services_list),*]
+
+            pub fn setup(config: &mut dblib::actix_web::web::ServiceConfig) {
+                config #(#services_list)*;
+                // TODO: Implement data loading
+                let db = std::sync::Arc::new(dblib::futures::lock::Mutex::new(DataShard::new("test")));
+
+                config.app_data(dblib::actix_web::web::Data::new(db.clone()));
+                println!("Setting up!");
             }
+        }
+
+        #[no_mangle]
+        pub fn setup_shard() -> fn(&mut dblib::actix_web::web::ServiceConfig) {
+            println!("Call!");
+            DataShard::setup
         }
     };
 

@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use actix_web::App;
 use serde::{Deserialize, Serialize};
 pub mod macros;
 
@@ -68,5 +69,3 @@ where
 pub struct QueryParams {
     pub limit: Option<usize>,
 }
-
-pub trait Datashard {}
