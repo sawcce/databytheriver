@@ -56,9 +56,11 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
     });
 
     let methods = data_shard_info.models.clone();
+    let insert_methods =  data_shard_info.models.clone();
     let methods = methods
         .iter()
         .map(|ty| format_ident!("get_{}", ty.to_string().to_lowercase()))
+        .zip(insert_methods.iter().map(|ty| format_ident!("insert_{}", ty.to_string().to_lowercase())))
         .zip(data_shard_info.models.iter());
 
     let insert = data_shard_info.models.iter().map(|ty| {
@@ -72,26 +74,33 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
         }
     });
 
-    let branches = methods.clone().map(|(service, ..)| {
+    let branches = methods.clone().map(|((service, insert_service), ..)| {
         quote! {
-            Service::#service(#service) => #service.register(a_s)
+            Service::#service(#service) => #service.register(a_s),
+            Service::#insert_service(#insert_service) => #insert_service.register(a_s)
         }
     });
 
-    let services = methods.clone().map(|(service, ..)| {
+    let services = methods.clone().map(|((service, insert_service), ..)| {
         quote! {
-            #service(#service)
+            #service(#service),
+            #insert_service(#insert_service),
         }
     });
 
-    let services_list = methods.clone().map(|(service, ..)| {
+    let services_list = methods.clone().map(|((service, insert_service), ..)| {
         quote! {
             .service(#service)
+            .service(#insert_service)
         }
     });
 
-    let endpoints = methods.clone().map(|(ident, struct_name)| {
+    let endpoints = methods.clone().map(|((ident, insert_service), struct_name)| {
         let method_name = ident.to_string();
+
+        let insert_method = insert_service.to_string();
+        let insert_success_message = format!("{} succesfully inserted", struct_name.to_string());        
+
         let query_params = format_ident!("{}QueryParams", struct_name);
         let repo = format_ident!("{}_repo", struct_name.to_string().to_lowercase());
 
@@ -116,6 +125,20 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
                 }
 
                 Ok(dblib::serde_json::to_string(&builder.collect::<Vec<_>>()))
+            }
+        
+            
+            #[dblib::actix_web::get(#insert_method)]
+            pub async fn #insert_service(
+                db: dblib::actix_web::web::Data<std::sync::Arc<dblib::futures::lock::Mutex<DataShard>>>,
+                data: dblib::actix_web::web::Query<#struct_name>,
+            ) -> dblib::actix_web::Result<impl dblib::actix_web::Responder> {
+                let db = db.clone();
+                let mut db = db.lock().await;
+
+                db.#repo.insert_one(data.0);
+
+                Ok(#insert_success_message)
             }
         }
     });
