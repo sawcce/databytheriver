@@ -3,7 +3,7 @@ use quote::{format_ident, quote, ToTokens};
 use syn::{
     parse::{Parse, ParseStream},
     parse_macro_input,
-    token::Comma,
+    token::{Colon, Comma},
     Data, DeriveInput, Ident,
 };
 
@@ -297,4 +297,67 @@ pub fn query_params(input: TokenStream) -> TokenStream {
     println!("{result:#}");
 
     result
+}
+
+#[derive(Debug)]
+struct ModelInfo {
+    name: Ident,
+    fields: Vec<ModelField>,
+}
+#[derive(Debug)]
+struct ModelField {
+    name: Ident,
+    ty: Ident,
+}
+
+impl ModelInfo {
+    fn new(name: Ident, fields: Vec<ModelField>) -> Self {
+        Self { name, fields }
+    }
+}
+
+impl Parse for ModelInfo {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let name = input.parse::<Ident>()?;
+        input.parse::<Colon>()?;
+        let mut fields = Vec::new();
+
+        loop {
+            let field_name = input.parse()?;
+            input.parse::<Colon>()?;
+            let field_type = input.parse()?;
+
+            fields.push(ModelField {
+                name: field_name,
+                ty: field_type,
+            });
+
+            match input.parse::<Comma>() {
+                Ok(..) => {}
+                Err(..) => break,
+            };
+        }
+
+        Ok(ModelInfo::new(name, fields))
+    }
+}
+
+#[proc_macro]
+pub fn model(input: TokenStream) -> TokenStream {
+    let model_info = parse_macro_input!(input as ModelInfo);
+    let struct_name = model_info.name;
+
+    let fields = model_info
+        .fields
+        .iter()
+        .map(|ModelField { name, ty }| quote! {#name : #ty});
+
+    quote! {
+        #[derive(Debug, Clone, Serialize, Deserialize, QueryParams)]
+        pub struct #struct_name {
+            pub id: dblib::RID,
+            #(#fields),*
+        }
+    }
+    .into()
 }
