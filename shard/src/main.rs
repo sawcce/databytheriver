@@ -7,6 +7,8 @@ use actix_web::{web::ServiceConfig, App, HttpServer};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    dotenv::dotenv().ok();
+
     static LIB: OnceCell<Library> = OnceCell::new();
 
     let mut args = env::args().skip(1);

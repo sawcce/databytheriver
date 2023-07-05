@@ -1,5 +1,7 @@
+use bcrypt::verify;
 use std::sync::Arc;
 
+use actix_web::guard::GuardContext;
 use serde::{Deserialize, Serialize};
 pub mod macros;
 
@@ -69,4 +71,10 @@ where
 #[derive(Serialize, Deserialize)]
 pub struct QueryParams {
     pub limit: Option<usize>,
+}
+
+pub fn auth_guard(ctx: &GuardContext) -> bool {
+    return ctx.head().headers.get("Authorization").is_some_and(|pswd| {
+        verify(pswd.to_str().unwrap(), &std::env::var("PASSWORD").unwrap()).unwrap()
+    });
 }

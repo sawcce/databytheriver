@@ -109,7 +109,7 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
         let repo = format_ident!("{}_repo", struct_name.to_string().to_lowercase());
 
         quote! {
-            #[dblib::actix_web::get(#path_get)]
+            #[dblib::actix_web::get(#path_get, guard = "dblib::auth_guard")]
             pub async fn #get_service(
                 db: dblib::actix_web::web::Data<std::sync::Arc<dblib::futures::lock::Mutex<DataShard>>>,
                 query: dblib::actix_web::web::Query<#query_params>,
@@ -131,7 +131,7 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
                 Ok(dblib::serde_json::to_string(&builder.collect::<Vec<_>>()))
             }
 
-            #[dblib::actix_web::get(#path_insert)]
+            #[dblib::actix_web::get(#path_insert, guard = "dblib::auth_guard")]
             pub async fn #insert_service(
                 db: dblib::actix_web::web::Data<std::sync::Arc<dblib::futures::lock::Mutex<DataShard>>>,
                 data: dblib::actix_web::web::Query<#insert_struct_name>,
