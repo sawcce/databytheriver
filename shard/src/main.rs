@@ -10,8 +10,6 @@ use actix_web::{
     App, HttpServer,
 };
 
-data_shard!(User);
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     static LIB: OnceCell<Library> = OnceCell::new();
