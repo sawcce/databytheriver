@@ -345,18 +345,38 @@ impl Parse for ModelInfo {
 #[proc_macro]
 pub fn model(input: TokenStream) -> TokenStream {
     let model_info = parse_macro_input!(input as ModelInfo);
-    let struct_name = model_info.name;
+    let struct_name: Ident = model_info.name.clone();
+    let insert_struct_name = format_ident!("Insert{}Model", model_info.name);
 
     let fields = model_info
         .fields
         .iter()
-        .map(|ModelField { name, ty }| quote! {#name : #ty});
+        .map(|ModelField { name, ty }| quote! {#name : #ty})
+        .collect::<Vec<_>>();
+
+    let field_init = model_info
+        .fields
+        .iter()
+        .map(|ModelField { name, .. }| quote! {#name: self.#name});
 
     quote! {
         #[derive(Debug, Clone, Serialize, Deserialize, QueryParams)]
         pub struct #struct_name {
             pub id: dblib::RID,
             #(#fields),*
+        }
+
+        pub struct #insert_struct_name {
+            #(#fields),*
+        }
+
+        impl #insert_struct_name {
+            pub fn into_model(self, id: dblib::RID) -> #struct_name {
+                #struct_name {
+                    id,
+                    #(#field_init),*
+                }
+            }
         }
     }
     .into()
