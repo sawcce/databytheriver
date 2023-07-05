@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use actix_web::App;
 use serde::{Deserialize, Serialize};
 pub mod macros;
 

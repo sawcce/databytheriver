@@ -1,14 +1,9 @@
-use std::{env, sync::Arc};
+use std::env;
 
-use dblib::macros::data_shard;
 use libloading::{Library, Symbol};
 use once_cell::sync::OnceCell;
-use shared::models::{User, UserQueryParams};
 
-use actix_web::{
-    web::{self, ServiceConfig},
-    App, HttpServer,
-};
+use actix_web::{web::ServiceConfig, App, HttpServer};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
