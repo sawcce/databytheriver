@@ -55,13 +55,16 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
         }
     });
 
-    let methods = data_shard_info.models.clone();
-    let insert_methods =  data_shard_info.models.clone();
-    let methods = methods
+    let methods = data_shard_info
+        .models
         .iter()
         .map(|ty| format_ident!("get_{}", ty.to_string().to_lowercase()))
-        .zip(insert_methods.iter().map(|ty| format_ident!("insert_{}", ty.to_string().to_lowercase())))
-        .zip(data_shard_info.models.iter());
+        .zip(
+            data_shard_info
+                .models
+                .iter()
+                .map(|ty| format_ident!("insert_{}", ty.to_string().to_lowercase())),
+        );
 
     let insert = data_shard_info.models.iter().map(|ty| {
         let ident = format_ident!("insert_{}", ty.to_string().to_lowercase());
@@ -74,39 +77,39 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
         }
     });
 
-    let branches = methods.clone().map(|((service, insert_service), ..)| {
+    let branches = methods.clone().map(|(get_service, insert_service)| {
         quote! {
-            Service::#service(#service) => #service.register(a_s),
+            Service::#get_service(#get_service) => #get_service.register(a_s),
             Service::#insert_service(#insert_service) => #insert_service.register(a_s)
         }
     });
 
-    let services = methods.clone().map(|((service, insert_service), ..)| {
+    let services = methods.clone().map(|(get_service, insert_service)| {
         quote! {
-            #service(#service),
+            #get_service(#get_service),
             #insert_service(#insert_service),
         }
     });
 
-    let services_list = methods.clone().map(|((service, insert_service), ..)| {
+    let services_list = methods.clone().map(|(get_service, insert_service)| {
         quote! {
-            .service(#service)
+            .service(#get_service)
             .service(#insert_service)
         }
     });
 
-    let endpoints = methods.clone().map(|((ident, insert_service), struct_name)| {
-        let method_name = ident.to_string();
+    let endpoints = methods.clone().zip(data_shard_info.models.clone()).map(|((get_service, insert_service), struct_name)| {
+        let path_get = get_service.to_string();
 
-        let insert_method = insert_service.to_string();
+        let path_insert = insert_service.to_string();
         let insert_success_message = format!("{} succesfully inserted", struct_name.to_string());        
 
         let query_params = format_ident!("{}QueryParams", struct_name);
         let repo = format_ident!("{}_repo", struct_name.to_string().to_lowercase());
 
         quote! {
-            #[dblib::actix_web::get(#method_name)]
-            pub async fn #ident(
+            #[dblib::actix_web::get(#path_get)]
+            pub async fn #get_service(
                 db: dblib::actix_web::web::Data<std::sync::Arc<dblib::futures::lock::Mutex<DataShard>>>,
                 query: dblib::actix_web::web::Query<#query_params>,
                 params: dblib::actix_web::web::Query<dblib::QueryParams>,
@@ -126,9 +129,8 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
 
                 Ok(dblib::serde_json::to_string(&builder.collect::<Vec<_>>()))
             }
-        
-            
-            #[dblib::actix_web::get(#insert_method)]
+
+            #[dblib::actix_web::get(#path_insert)]
             pub async fn #insert_service(
                 db: dblib::actix_web::web::Data<std::sync::Arc<dblib::futures::lock::Mutex<DataShard>>>,
                 data: dblib::actix_web::web::Query<#struct_name>,
