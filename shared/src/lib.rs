@@ -1,6 +1,6 @@
 use crate::models::UserQueryParams;
 use dblib::macros::data_shard;
-use models::User;
+use models::*;
 
 pub mod models;
 

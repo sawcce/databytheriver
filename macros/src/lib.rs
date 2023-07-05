@@ -100,6 +100,7 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
 
     let endpoints = methods.clone().zip(data_shard_info.models.clone()).map(|((get_service, insert_service), struct_name)| {
         let path_get = get_service.to_string();
+        let insert_struct_name = format_ident!("Insert{}Model", struct_name);
 
         let path_insert = insert_service.to_string();
         let insert_success_message = format!("{} succesfully inserted", struct_name.to_string());        
@@ -133,12 +134,13 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
             #[dblib::actix_web::get(#path_insert)]
             pub async fn #insert_service(
                 db: dblib::actix_web::web::Data<std::sync::Arc<dblib::futures::lock::Mutex<DataShard>>>,
-                data: dblib::actix_web::web::Query<#struct_name>,
+                data: dblib::actix_web::web::Query<#insert_struct_name>,
             ) -> dblib::actix_web::Result<impl dblib::actix_web::Responder> {
                 let db = db.clone();
                 let mut db = db.lock().await;
 
-                db.#repo.insert_one(data.0);
+                let model = data.0.into_model(db.generate_id());
+                db.#repo.insert_one(model);
 
                 Ok(#insert_success_message)
             }
@@ -172,6 +174,10 @@ pub fn data_shard(input: TokenStream) -> TokenStream {
                     id: dblib::RID::new(id),
                     #(#fields_init),*
                 }
+            }
+
+            pub fn generate_id(&mut self) -> dblib::RID {
+                dblib::RID::new(dblib::uuid::Uuid::new_v4().to_string())
             }
 
             #(#insert)*
@@ -366,6 +372,7 @@ pub fn model(input: TokenStream) -> TokenStream {
             #(#fields),*
         }
 
+        #[derive(Serialize, Deserialize)]
         pub struct #insert_struct_name {
             #(#fields),*
         }
