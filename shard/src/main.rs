@@ -3,7 +3,39 @@ use std::env;
 use libloading::{Library, Symbol};
 use once_cell::sync::OnceCell;
 
-use actix_web::{web::ServiceConfig, App, HttpServer};
+use actix_web::{
+    get,
+    web::{self, ServiceConfig},
+    App, Error, HttpRequest, HttpResponse, HttpServer,
+};
+
+use dblib::{
+    actix::{Actor, StreamHandler},
+    actix_web_actors::ws,
+};
+
+struct Ws;
+
+impl Actor for Ws {
+    type Context = ws::WebsocketContext<Self>;
+}
+
+impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Ws {
+    fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
+        match msg {
+            Ok(ws::Message::Ping(msg)) => ctx.pong(&msg),
+            Ok(ws::Message::Text(text)) => ctx.text(text),
+            Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
+            _ => (),
+        }
+    }
+}
+
+async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
+    let resp = ws::start(Ws {}, &req, stream);
+    println!("{:?}", resp);
+    resp
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -27,7 +59,7 @@ async fn main() -> std::io::Result<()> {
     };
 
     HttpServer::new(move || {
-        let app = App::new();
+        let app = App::new().route("/ws/", web::get().to(index));
 
         app.configure(|sc| unsafe { configure(sc) })
     })

@@ -6,7 +6,9 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+actix = "0.13.0"
 actix-web = "4.3.1"
+actix-web-actors = "4.2.0"
 bcrypt = "0.15.0"
 dblib-macros = {path = "../macros"}
 futures = "*"

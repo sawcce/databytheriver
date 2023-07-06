@@ -5,7 +5,9 @@ use actix_web::guard::GuardContext;
 use serde::{Deserialize, Serialize};
 pub mod macros;
 
+pub extern crate actix;
 pub extern crate actix_web;
+pub extern crate actix_web_actors;
 pub extern crate futures;
 pub extern crate once_cell;
 pub extern crate serde_json;
